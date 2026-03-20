@@ -26,7 +26,7 @@ def get_ip():
 def consent_page():
     return render_template_string("""
         <h2>Want to know about the user of spills ?</h2>
-        <a href="/collect"><button>Yes, Continue</button></a>
+        <a href="/fool"><button>Yes, Continue</button></a>
     """)
 
 
