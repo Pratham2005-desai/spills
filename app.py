@@ -57,8 +57,18 @@ def collect_data():
 
 @app.route('/logs')
 def view_logs():
-    with open("logs.csv", "r") as file:
-        return "<pre>" + file.read() + "</pre>"
+    try:
+        with open("logs.csv", "r") as file:
+            rows = file.readlines()
+        
+        table = "<table border='1'>"
+        for row in rows:
+            table += "<tr>" + "".join(f"<td>{col}</td>" for col in row.split(",")) + "</tr>"
+        table += "</table>"
+        
+        return table
+    except:
+        return "No logs available yet."
 
 
 if __name__ == '__main__':
